@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'contact_field_abad_oriol.dart'; // Primera pantalla del asistente
+import 'contact_field_2_abad_oriol.dart'; // Segunda pantalla del asistente
+import 'contact_field_3_abad_oriol.dart'; // Tercera pantalla del asistente
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -11,11 +13,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'FormA - Abad Oriol',
+      title: 'Asistent',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: SplashScreen(),
+      home: const SplashScreen(), // Pantalla inicial azul
     );
   }
 }
@@ -27,9 +29,10 @@ class SplashScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Navigator.push(
+        // Navegar a la siguiente pantalla al hacer click
+        Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => MyHomePage()),
+          MaterialPageRoute(builder: (context) => const WizardScreen()),
         );
       },
       child: Scaffold(
@@ -70,141 +73,130 @@ class SplashScreen extends StatelessWidget {
   }
 }
 
-class MyHomePage extends StatelessWidget {
-  final _formKey = GlobalKey<FormBuilderState>();
+class WizardScreen extends StatefulWidget {
+  const WizardScreen({super.key});
 
-  MyHomePage({super.key});
+  @override
+  State<WizardScreen> createState() => _WizardScreenState();
+}
+
+class _WizardScreenState extends State<WizardScreen> {
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+
+  void _nextPage() {
+    if (_currentPage < 2) {
+      setState(() => _currentPage++);
+      _pageController.nextPage(
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeIn,
+      );
+    } else {
+      _submitForm();
+    }
+  }
+
+  void _previousPage() {
+    if (_currentPage > 0) {
+      setState(() => _currentPage--);
+      _pageController.previousPage(
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeIn,
+      );
+    }
+  }
+
+  void _submitForm() {
+    // Acción final cuando se presiona "FINALIZAR"
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Completat"),
+        content: const Text("Formulari enviat!"),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Cierra el diálogo
+            },
+            child: const Text("Tancar"),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Formulari Exemple"),
-        backgroundColor: Colors.lightBlue,
+        title: const Text('Salesians Sarrià 24/25'),
+        backgroundColor: Colors.blue.shade700,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: FormBuilder(
-          key: _formKey,
-          child: Column(
-            children: <Widget>[
-              FormTitle(title: 'Formulari de Registre'),
-              FormLabelGroup(label: 'Gènere'),
-              FormBuilderRadioGroup<String>(
-                name: 'gender',
-                decoration: InputDecoration(labelText: 'Selecciona el gènere'),
-                options: [
-                  FormBuilderFieldOption(value: 'Masculí'),
-                  FormBuilderFieldOption(value: 'Femení'),
-                ],
-              ),
-              FormLabelGroup(label: 'Nom'),
-              FormBuilderTextField(
-                name: 'name',
-                decoration: InputDecoration(
-                  labelText: 'Escriu el teu nom',
-                  filled: true,
-                  fillColor: Colors.grey.shade300,
-                ),
-              ),
-              FormLabelGroup(label: 'Aficions'),
-              FormBuilderCheckboxGroup(
-                name: 'hobbies',
-                decoration: InputDecoration(labelText: 'Selecciona aficions'),
-                options: [
-                  FormBuilderFieldOption(value: 'Lectura'),
-                  FormBuilderFieldOption(value: 'Esports'),
-                  FormBuilderFieldOption(value: 'Música'),
-                ],
-              ),
-              FormLabelGroup(label: 'Ciutat'),
-              FormBuilderDropdown<String>(
-                name: 'city',
-                decoration: InputDecoration(labelText: 'Selecciona la ciutat'),
-                items: [
-                  DropdownMenuItem(value: 'Barcelona', child: Text('Barcelona')),
-                  DropdownMenuItem(value: 'Madrid', child: Text('Madrid')),
-                  DropdownMenuItem(value: 'Valencia', child: Text('Valencia')),
-                ],
-              ),
-              SizedBox(height: 20),
-            ],
+      body: Column(
+        children: [
+          // Barra de progreso que indica la sección actual
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            color: Colors.grey[200],
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildProgressIndicator("Pers.", 0),
+                _buildProgressIndicator("Contact", 1),
+                _buildProgressIndicator("Upload", 2),
+              ],
+            ),
           ),
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          if (_formKey.currentState?.saveAndValidate() ?? false) {
-            final formValues = _formKey.currentState?.value;
-            final String gender = formValues?['gender'] ?? '';
-            final String name = formValues?['name'] ?? '';
-            final List<String> hobbies =
-                List<String>.from(formValues?['hobbies'] ?? []);
-            final String city = formValues?['city'] ?? '';
-
-            String summary = 'Resumen de las opciones seleccionadas:\n';
-            summary += 'Gènere: $gender\n';
-            summary += 'Nom: $name\n';
-            summary += 'Aficions: ${hobbies.join(', ')}\n';
-            summary += 'Ciutat: $city';
-
-            alertDialog(context, summary);
-          } else {
-            print("Validació fallida");
-            alertDialog(context, "Error en la validación.");
-          }
-        },
-        backgroundColor: Colors.blue,
-        child: Icon(Icons.send), // Puedes cambiar el color del botón
+          const Divider(height: 1, color: Colors.grey),
+          Expanded(
+            child: PageView(
+              controller: _pageController,
+              physics: const NeverScrollableScrollPhysics(),
+              children: const [
+                ContactField(),
+                ContactScreen(),
+                UploadScreen(),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                if (_currentPage > 0)
+                  ElevatedButton(
+                    onPressed: _previousPage,
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                    child: const Text('ENRERE'),
+                  ),
+                ElevatedButton(
+                  onPressed: _nextPage,
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                  child: Text(_currentPage == 2 ? 'FINALITZAR' : 'CONTINUAR'),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
-}
 
-void alertDialog(BuildContext context, String contentText) {
-  showDialog<String>(
-    context: context,
-    builder: (BuildContext context) => AlertDialog(
-      title: const Text("Formulari enviat!"),
-      icon: const Icon(Icons.check_circle),
-      content: Text(contentText),
-      actions: <Widget>[
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: const Text('Cerrar'),
+  Widget _buildProgressIndicator(String label, int pageIndex) {
+    return Column(
+      children: [
+        CircleAvatar(
+          radius: 15,
+          backgroundColor: _currentPage == pageIndex ? Colors.blue : Colors.grey,
+          child: Text('${pageIndex + 1}', style: const TextStyle(color: Colors.white)),
+        ),
+        const SizedBox(height: 5),
+        Text(
+          label,
+          style: TextStyle(color: _currentPage == pageIndex ? Colors.blue : Colors.grey),
         ),
       ],
-    ),
-  );
-}
-
-class FormLabelGroup extends StatelessWidget {
-  final String label;
-  const FormLabelGroup({super.key, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Text(
-        label,
-        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-      ),
-    );
-  }
-}
-
-class FormTitle extends StatelessWidget {
-  final String title;
-  const FormTitle({super.key, required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
     );
   }
 }
